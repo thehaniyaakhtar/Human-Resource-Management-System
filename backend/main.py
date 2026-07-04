@@ -60,10 +60,10 @@ def generate_employee_id(company_name: str, full_name: str, year: int, company_s
     return f"{company_code}{name_code}{year}{serial}"
 
 def hash_password(password: str) -> str:
-    return pwd_context.hash(password)
+    return pwd_context.hash(password.encode()[:72])
 
 def verify_password(plain: str, hashed: str) -> bool:
-    return pwd_context.verify(plain, hashed)
+    return pwd_context.verify(plain.encode()[:72], hashed)
 
 def create_token(data: dict) -> str:
     to_encode = data.copy()
