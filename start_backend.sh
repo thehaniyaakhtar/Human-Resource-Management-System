@@ -1,4 +1,3 @@
 #!/bin/bash
 cd "$(dirname "$0")/backend"
-pip install -r requirements.txt -q
-uvicorn main:app --reload --host 0.0.0.0 --port 8000
+conda run --no-capture-output -n hrms uvicorn main:app --reload --host 0.0.0.0 --port 8000
