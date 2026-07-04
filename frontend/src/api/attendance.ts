@@ -5,7 +5,6 @@ const API = axios.create({
 });
 
 API.interceptors.request.use((config) => {
-
     const token = localStorage.getItem("token");
 
     if (token) {
@@ -15,11 +14,15 @@ API.interceptors.request.use((config) => {
     return config;
 });
 
-export const checkIn = () =>
-    API.post("/attendance/checkin");
+// Attendance APIs
+export const checkIn = async () => {
+    return API.post("/attendance/checkin");
+};
 
-export const checkOut = () =>
-    API.post("/attendance/checkout");
+export const checkOut = async () => {
+    return API.post("/attendance/checkout");
+};
 
-export const getAttendance = () =>
-    API.get("/attendance/me");
+export const getMyAttendance = async () => {
+    return API.get("/attendance/me");
+};

@@ -1,50 +1,27 @@
 import { useEffect, useState } from "react";
-
-import {
-    getAttendance,
-} from "../api/attendance";
-
+import { getMyAttendance } from "../api/attendance";
 import { AttendanceRecord } from "../types/attendance";
 
 export default function useAttendance() {
+    const [records, setRecords] = useState<AttendanceRecord[]>([]);
+    const [loading, setLoading] = useState(true);
 
-    const [records, setRecords] =
-        useState<AttendanceRecord[]>([]);
-
-    const [loading, setLoading] =
-        useState(true);
-
-    async function loadAttendance() {
-
+    const fetchAttendance = async () => {
         try {
-
-            const response =
-                await getAttendance();
-
-            setRecords(response.data);
-
+            const res = await getMyAttendance();
+            setRecords(res.data);
         } finally {
-
             setLoading(false);
-
         }
-
-    }
+    };
 
     useEffect(() => {
-
-        loadAttendance();
-
+        fetchAttendance();
     }, []);
 
     return {
-
         records,
-
         loading,
-
-        refresh: loadAttendance,
-
+        refresh: fetchAttendance,
     };
-
 }

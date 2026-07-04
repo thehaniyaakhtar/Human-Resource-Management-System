@@ -1,33 +1,14 @@
 import { checkOut } from "../../api/attendance";
 
-interface Props {
-
-    refresh: () => void;
-
-}
-
-export default function CheckOutButton({
-
-    refresh,
-
-}: Props) {
-
-    async function handleClick() {
-
+export default function CheckOutButton({ refresh }: { refresh: () => void }) {
+    const handleClick = async () => {
         await checkOut();
-
         refresh();
-
-    }
+    };
 
     return (
-
-        <button onClick={handleClick}>
-
+        <button style={{ padding: "8px 12px" }} onClick={handleClick}>
             Check Out
-
         </button>
-
     );
-
 }
