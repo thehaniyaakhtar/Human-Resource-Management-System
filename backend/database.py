@@ -1,8 +1,9 @@
 import os
 import uuid
-from sqlalchemy import create_engine, Column, String, Boolean, Float, Integer, ForeignKey, Text
+from sqlalchemy import create_engine, Column, String, Boolean, Float, Integer, ForeignKey, Text, Date, DateTime
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, relationship
+from datetime import datetime
 
 DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./hrms.db")
 
@@ -87,3 +88,32 @@ class User(Base):
     # Relationships
     salary = relationship("SalaryStructure", uselist=False, back_populates="user", cascade="all, delete-orphan")
     documents = relationship("Document", back_populates="user", cascade="all, delete-orphan")
+
+class Attendance(Base):
+    __tablename__ = "attendance"
+
+    id = Column(Integer, primary_key=True, index=True)
+
+    employee_id = Column(
+        String,
+        ForeignKey("users.employee_id", ondelete="CASCADE"),
+        nullable=False
+    )
+
+    date = Column(Date, nullable=False)
+
+    check_in = Column(DateTime, nullable=True)
+
+    check_out = Column(DateTime, nullable=True)
+
+    work_hours = Column(Float, default=0)
+
+    extra_hours = Column(Float, default=0)
+
+    status = Column(String, default="Absent")
+    # Present
+    # Absent
+    # Half-day
+    # Leave
+
+    user = relationship("User")
