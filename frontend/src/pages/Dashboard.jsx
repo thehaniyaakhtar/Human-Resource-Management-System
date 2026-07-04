@@ -1,7 +1,7 @@
 import { motion } from 'framer-motion'
 import { useAuth } from '../context/AuthContext'
 import { useNavigate } from 'react-router-dom'
-import { LogOut, User, Building2, Hash } from 'lucide-react'
+import { LogOut, User, Building2, Hash, UserPlus, Users } from 'lucide-react'
 
 export default function Dashboard() {
   const { user, logout } = useAuth()
@@ -148,6 +148,52 @@ export default function Dashboard() {
               </motion.div>
             ))}
           </div>
+
+          {user?.role === 'hr' && (
+            <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', marginTop: '28px', flexWrap: 'wrap' }}>
+              <motion.button
+                type="button"
+                onClick={() => navigate('/employees')}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.97 }}
+                style={{
+                  display: 'inline-flex', alignItems: 'center', gap: '8px',
+                  padding: '12px 20px',
+                  background: 'var(--surface)',
+                  color: 'var(--text)',
+                  border: '1.5px solid var(--border)',
+                  borderRadius: 'var(--radius-sm)',
+                  fontSize: '14px',
+                  fontWeight: '600',
+                  cursor: 'pointer',
+                }}
+              >
+                <Users size={16} />
+                View Employees
+              </motion.button>
+              <motion.button
+                type="button"
+                onClick={() => navigate('/employees/new')}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.97 }}
+                style={{
+                  display: 'inline-flex', alignItems: 'center', gap: '8px',
+                  padding: '12px 20px',
+                  background: 'linear-gradient(135deg, var(--purple-deep), var(--purple))',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: 'var(--radius-sm)',
+                  fontSize: '14px',
+                  fontWeight: '600',
+                  cursor: 'pointer',
+                  boxShadow: '0 4px 16px rgba(113,75,103,0.35)',
+                }}
+              >
+                <UserPlus size={16} />
+                Add Employee
+              </motion.button>
+            </div>
+          )}
 
           <p style={{ marginTop: '32px', fontSize: '13px', color: 'var(--text-subtle)' }}>
             Dashboard modules (Attendance, Leave, Payroll) coming next.
