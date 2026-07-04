@@ -11,13 +11,10 @@ api.interceptors.request.use((config) => {
   return config
 })
 
-export const signIn = (email, password) =>
-  api.post('/auth/signin', { email, password })
-
-export const signUp = (data) =>
-  api.post('/auth/signup', data)
-
-export const getMe = () =>
-  api.get('/auth/me')
+export const hrSignUp = (data) => api.post('/auth/hr/signup', data)
+export const signIn = (login_id, password) => api.post('/auth/signin', { login_id, password })
+export const changePassword = (data) => api.post('/auth/change-password', data)
+export const createEmployee = (data) => api.post('/auth/employees', data)
+export const getMe = () => api.get('/auth/me')
 
 export default api
