@@ -11,8 +11,16 @@ import string
 import uuid
 
 from sqlalchemy.orm import Session
-from database import Base, engine, get_db, User, CompanySerial, SalaryStructure, Document
-
+from database import (
+    Base,
+    engine,
+    get_db,
+    User,
+    CompanySerial,
+    SalaryStructure,
+    Document,
+    Attendance,
+)
 # Automatically create all tables on application load
 Base.metadata.create_all(bind=engine)
 
@@ -82,6 +90,16 @@ class ChangePasswordRequest(BaseModel):
     current_password: str
     new_password: str
     confirm_new_password: str
+    
+class AttendanceResponse(BaseModel):
+    id: int
+    employee_id: str
+    date: str
+    check_in: Optional[str] = None
+    check_out: Optional[str] = None
+    work_hours: float
+    extra_hours: float
+    status: str
 
 class TokenResponse(BaseModel):
     access_token: str
@@ -401,6 +419,90 @@ async def change_password(body: ChangePasswordRequest, current_user: User = Depe
 async def me(current_user: User = Depends(get_current_user)):
     return safe(model_to_dict(current_user))
 
+@app.post("/attendance/checkin")
+async def check_in(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+
+    today = datetime.utcnow().date()
+
+    existing = (
+        db.query(Attendance)
+        .filter(
+            Attendance.employee_id == current_user.employee_id,
+            Attendance.date == today,
+        )
+        .first()
+    )
+
+    if existing:
+        raise HTTPException(
+            status_code=400,
+            detail="Already checked in today",
+        )
+
+    attendance = Attendance(
+        employee_id=current_user.employee_id,
+        date=today,
+        check_in=datetime.utcnow(),
+        status="Present",
+    )
+
+    db.add(attendance)
+    db.commit()
+    db.refresh(attendance)
+
+    return {
+        "message": "Checked in successfully",
+        "attendance_id": attendance.id,
+    }
+    
+@app.post("/attendance/checkin")
+async def check_in(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+
+    today = datetime.utcnow().date()
+
+    existing = (
+        db.query(Attendance)
+        .filter(
+            Attendance.employee_id == current_user.employee_id,
+            Attendance.date == today,
+        )
+        .first()
+    )
+
+    if existing:
+        raise HTTPException(
+            status_code=400,
+            detail="Already checked in today",
+        )
+
+    attendance = Attendance(
+        employee_id=current_user.employee_id,
+        date=today,
+        check_in=datetime.utcnow(),
+        status="Present",
+    )
+
+    db.add(attendance)
+    db.commit()
+    db.refresh(attendance)
+
+    return {
+        "message": "Checked in successfully",
+        "attendance_id": attendance.id,
+    }
+    
 @app.get("/health")
 async def health():
     return {"status": "ok"}
+
+@app.get("/")
+async def root():
+    return {
+        "message": "HRMS API Running 🚀"
+    }

@@ -117,3 +117,5 @@ class Attendance(Base):
     # Leave
 
     user = relationship("User")
+    
+Base.metadata.create_all(bind=engine)
