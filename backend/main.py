@@ -458,15 +458,14 @@ async def check_in(
         "attendance_id": attendance.id,
     }
     
-@app.post("/attendance/checkin")
-async def check_in(
+@app.post("/attendance/checkout")
+async def check_out(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-
     today = datetime.utcnow().date()
 
-    existing = (
+    attendance = (
         db.query(Attendance)
         .filter(
             Attendance.employee_id == current_user.employee_id,
@@ -475,27 +474,140 @@ async def check_in(
         .first()
     )
 
-    if existing:
+    if not attendance:
         raise HTTPException(
             status_code=400,
-            detail="Already checked in today",
+            detail="You haven't checked in today."
         )
 
-    attendance = Attendance(
-        employee_id=current_user.employee_id,
-        date=today,
-        check_in=datetime.utcnow(),
-        status="Present",
-    )
+    if attendance.check_out:
+        raise HTTPException(
+            status_code=400,
+            detail="Already checked out."
+        )
 
-    db.add(attendance)
+    attendance.check_out = datetime.utcnow()
+
+    total_seconds = (
+        attendance.check_out - attendance.check_in
+    ).total_seconds()
+
+    hours = round(total_seconds / 3600, 2)
+
+    attendance.work_hours = hours
+    attendance.extra_hours = max(0, round(hours - 8, 2))
+
+    if hours >= 8:
+        attendance.status = "Present"
+    elif hours >= 4:
+        attendance.status = "Half-day"
+    else:
+        attendance.status = "Absent"
+
     db.commit()
-    db.refresh(attendance)
 
     return {
-        "message": "Checked in successfully",
-        "attendance_id": attendance.id,
+        "message": "Checked out successfully",
+        "work_hours": attendance.work_hours,
+        "extra_hours": attendance.extra_hours,
+        "status": attendance.status,
     }
+  
+@app.get("/attendance/me")
+async def get_my_attendance(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    records = (
+        db.query(Attendance)
+        .filter(
+            Attendance.employee_id == current_user.employee_id
+        )
+        .order_by(Attendance.date.desc())
+        .all()
+    )
+
+    return [
+        {
+            "id": record.id,
+            "date": record.date,
+            "check_in": record.check_in,
+            "check_out": record.check_out,
+            "work_hours": record.work_hours,
+            "extra_hours": record.extra_hours,
+            "status": record.status,
+        }
+        for record in records
+    ]
+    
+@app.get("/attendance")
+async def get_all_attendance(
+    hr: User = Depends(require_hr),
+    db: Session = Depends(get_db),
+):
+    records = (
+        db.query(Attendance)
+        .join(User)
+        .filter(User.company_name == hr.company_name)
+        .order_by(Attendance.date.desc())
+        .all()
+    )
+
+    return [
+        {
+            "employee_id": record.employee_id,
+            "employee_name": record.user.name,
+            "date": record.date,
+            "check_in": record.check_in,
+            "check_out": record.check_out,
+            "work_hours": record.work_hours,
+            "extra_hours": record.extra_hours,
+            "status": record.status,
+        }
+        for record in records
+    ]
+    
+@app.get("/attendance/{employee_id}")
+async def get_employee_attendance(
+    employee_id: str,
+    hr: User = Depends(require_hr),
+    db: Session = Depends(get_db),
+):
+    employee = (
+        db.query(User)
+        .filter(
+            User.employee_id == employee_id,
+            User.company_name == hr.company_name,
+        )
+        .first()
+    )
+
+    if not employee:
+        raise HTTPException(
+            status_code=404,
+            detail="Employee not found",
+        )
+
+    records = (
+        db.query(Attendance)
+        .filter(
+            Attendance.employee_id == employee_id
+        )
+        .order_by(Attendance.date.desc())
+        .all()
+    )
+
+    return [
+        {
+            "date": record.date,
+            "check_in": record.check_in,
+            "check_out": record.check_out,
+            "work_hours": record.work_hours,
+            "extra_hours": record.extra_hours,
+            "status": record.status,
+        }
+        for record in records
+    ]
     
 @app.get("/health")
 async def health():
